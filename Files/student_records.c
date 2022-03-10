@@ -12,12 +12,16 @@ struct record{
     int grade;
 };
 
-int open(char* file_name, FILE **fp, int *num_elements);
-int close(FILE **fp);
+
+
 int add(FILE *fp);
-int read(FILE *fp, int num, int rec, struct record *entry);
+int close(FILE **fp);
+int modify(FILE *fp, int num_elements, int rec);
+int open(char* file_name, FILE **fp, int *num_elements);
 int print(struct record temp);
 void printall(FILE *fp, int num_elements);
+int read(FILE *fp, int num, int rec, struct record *entry);
+
 
 
 int main(){
@@ -27,74 +31,84 @@ int main(){
     struct record temp;
 
     while(1){
-        printf("\nMENU:\n=====================");
+        printf("\nMENU:\n--------------------");
         printf("\n1. Open file\n====================");
         printf("\n2. Close file\n====================");
         printf("\n3. Add Entry\n====================");
         printf("\n4. Read Entry\n====================");
         printf("\n5. Print all Entries\n====================");
-        printf("\n6. Exit \n====================\n");
+        printf("\n6. Modify Entry\n====================");
+        printf("\n7. Exit \n====================\n");
         scanf("%d", &choice);
 
         switch(choice){
-        case 1:
-            check = open(file_name, &fp, &N);
-            if(check){
-                printf("Successfully opened!");
-            }
-            else{
-                printf("Error");
-                exit(0);
-            }
-            break;
-        case 2:
-            check = close(&fp);
-            if(check){
-                printf("Successfully closed!");
-            } else{
-               printf("Error");
-               exit(0);
-            }
-            break;
+            case 1:
+                check = open(file_name, &fp, &N);
+                if(check){
+                    printf("Successfully opened!");
+                }
+                else{
+                    printf("Error");
+                    exit(0);
+                }
+                break;
+            case 2:
+                check = close(&fp);
+                if(check){
+                    printf("Successfully closed!");
+                } else{
+                    printf("Error");
+                    exit(0);
+                }
+                break;
             
-        case 3:
-            check = add(fp);
-            if(check){
-                printf("Successfully added!");
-                N++;
-            }
-                
-            else{
-                printf("Error");
+            case 3:
+                check = add(fp);
+                if(check){
+                    printf("Successfully added!");
+                    N++;
+                }
+                    
+                else{
+                    printf("Error");
+                    exit(0);
+                }
+                break;
+            case 4:
+                printf("Which entry should be read?");
+                scanf("%d", &rec);
+                check = read(fp, N, rec, &temp);
+                if(!check){
+                    printf("Error index overflow!");
+                    continue;
+                }
+                    
+                printf("\nEntry %d:\n", rec);
+                print(temp);
+                break;
+
+            case 5:
+                printall(fp, N);
+                break;
+            
+            case 6:
+                printf("Which Entry should be modified?");
+                scanf("%d", &rec);
+                check = modify(fp, N, rec);
+                if(!check){
+                    printf("Error, index overflow!");
+                    continue;
+                }
+
+                break;
+            case 7:
+                printf("Bye bye!");
                 exit(0);
-            }
-            break;
-        case 4:
-            printf("Which entry should be read?");
-            scanf("%d", &rec);
-            check = read(fp, N, rec, &temp);
-            if(!check){
-                printf("Error index overflow!");
-                continue;
-            }
-                
-            printf("\nEntry %d:\n", rec);
-            print(temp);
-            break;
+            default:
+                printf("Wrong choice!");
 
-        case 5:
-            printall(fp, N);
-            break;
-        case 6:
-            printf("Bye bye!");
-            exit(0);
-        default:
-            printf("Wrong choice!");
-
-    }
-    }
-    
-    
+        }
+    }    
     return 0;
 }
 
@@ -119,6 +133,35 @@ int add(FILE *fp){
 int close(FILE **fp){
     if(fclose(*fp)==0)
         return TRUE;
+    else
+        return FALSE;
+    
+}
+
+int modify(FILE *fp, int num_elements, int rec){
+    struct record temp;
+    if(rec>=0 && rec<=num_elements-1){
+        fseek(fp, rec*sizeof(struct record), SEEK_SET);
+        fread(&temp, sizeof(struct record), 1, fp);
+        printf("The Entry is:\n");
+        print(temp);
+        printf("Modification:\n--------------------\n");
+        printf("Name:\n");
+        scanf("%s", temp.name);
+        printf("Surname:\n");
+        scanf("%s", temp.surname);
+        printf("Age:\n");
+        scanf("%d", &temp.age);
+        printf("Grade:\n");
+        scanf("%d", &temp.grade);
+        printf("\n--------------------\n");
+        print(temp);
+
+        fseek(fp, rec*sizeof(struct record), SEEK_SET);
+        fwrite(&temp, sizeof(struct record), 1, fp);
+        return TRUE;
+
+    }
     else
         return FALSE;
     
@@ -155,6 +198,7 @@ int open(char *file_name, FILE **fp, int *num_elements){
 
 int print(struct record temp){
     printf("\nName: %s\nSurname: %s\nAge:%d\nGrade: %d\n", temp.name, temp.surname, temp.age, temp.grade);
+    return 0;
 }
 
 void printall(FILE *fp, int num_elements){
